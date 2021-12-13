@@ -1,18 +1,18 @@
-cmake_minimum_required(VERSION 3.17)
+cmake_minimum_required(VERSION 3.16)
 project(gtest_training)
 
 set(CMAKE_CXX_STANDARD 20)
 
 
-message(WARNING
-        "If your compiler cpp20, skip this warning :) \n"
-        "If your default compiler does not support cpp20, then set it: \n"
-        "CXX=\"path_to_gcc/g++\" cmake <PATH_TO_THIS_CMakeLists.txt> \n"
-        "CC=\"path_to_gcc/gcc\" cmake <PATH_TO_THIS_CMakeLists.txt>\n"
-)
+# message(WARNING
+#         "If your compiler cpp20, skip this warning :) \n"
+#         "If your default compiler does not support cpp20, then set it: \n"
+#         "CXX=\"path_to_gcc/g++\" cmake <PATH_TO_THIS_CMakeLists.txt> \n"
+#         "CC=\"path_to_gcc/gcc\" cmake <PATH_TO_THIS_CMakeLists.txt>\n"
+# )
 # to avoid using LD_LIBRARY_PATH when building with external CC/CXX
-set(BUILD_SHARED_LIBS OFF)
-set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -static")
+# set(BUILD_SHARED_LIBS OFF)
+# set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -static")
 
 include(FetchContent)
 Set(FETCHCONTENT_QUIET FALSE)

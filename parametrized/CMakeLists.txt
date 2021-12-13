@@ -5,6 +5,7 @@ add_executable(go_to_parametrized
         03_version_with_3_5_and_2_3_in_two_fixtures.cpp
         04_parametrized.cpp
         05_parametrized_derived.cpp
+        06_variable_length_parametrized_test.cpp
         code/Solution.cpp
         code/Database.cpp)
 target_link_libraries(go_to_parametrized gtest_main gmock)
