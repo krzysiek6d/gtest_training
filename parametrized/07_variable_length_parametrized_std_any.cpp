@@ -2,7 +2,7 @@
 #include <iostream>
 #include <memory>
 #include <utility>
-
+#include <typeindex>
 
 /*
     system configuration base class and it's specified derived types
@@ -12,7 +12,7 @@ class SystemConfig
 public:
     virtual int getX() const = 0;
 };
-using SystemConfig_t = std::function<std::unique_ptr<SystemConfig>(void)>;
+using SystemConfig_t = std::unique_ptr<SystemConfig> (*)();
 
 class SystemConfig_x_123 : public SystemConfig
 {
@@ -44,7 +44,7 @@ class NetworkConfig
 public:
     virtual int getA() const = 0;
 };
-using NetworkConfig_t = std::function<std::unique_ptr<NetworkConfig>(void)>;
+using NetworkConfig_t = std::unique_ptr<NetworkConfig> (*)();
 
 class NetworkConfig_a_555 : public NetworkConfig
 {
@@ -69,13 +69,13 @@ private:
 };
 
 
+
 /*
     test fixture - using vector of variants to hold variable-length number of params
     note: having tuple forces to have explicit number of params
 */
-using ParamTypes = std::variant<SystemConfig_t, NetworkConfig_t>;
-using MyTestParams = std::vector<ParamTypes>;
-class MyTest : public ::testing::TestWithParam<std::vector<ParamTypes>>
+using MyTestParams = std::vector<std::any>;
+class MyTest2 : public ::testing::TestWithParam<std::vector<std::any>>
 {
     public:
     void SetUp() override
@@ -87,7 +87,6 @@ class MyTest : public ::testing::TestWithParam<std::vector<ParamTypes>>
         if (auto creator = getConfig<SystemConfig_t>(params))
         {
             std::cout << "has systemConfig" << std::endl;
-            systemConfig = (*creator)();
         }
         else
         {
@@ -96,47 +95,45 @@ class MyTest : public ::testing::TestWithParam<std::vector<ParamTypes>>
         if (auto creator = getConfig<NetworkConfig_t>(params))
         {
             std::cout << "has networkConfig" << std::endl;
-            networkConfig = (*creator)();
         }
     }
 
+
     template<typename T>
-    std::optional<T> getConfig(const std::vector<ParamTypes>& params)
+    std::optional<T> getConfig(const std::vector<std::any>& v)
     {
-        auto it = std::find_if(params.begin(), params.end(), [](const ParamTypes& param){return std::holds_alternative<T>(param);});
-        if (it == params.end())
-            return {};
-        return std::get<T>(*it);
-    }
+        for(auto&& e : v){
+            if(auto ptr = std::any_cast<T>(&e)){
+                return *ptr;
+            }
+        }
+        return std::nullopt;
+    } 
 
-    void assert_unqiue(std::vector<ParamTypes> params)
+    void assert_unqiue(const std::vector<std::any>& v)
     {
-        auto initialSize = params.size();
-        std::sort(params.begin(), params.end(), [](const auto& l, const auto& r)
+        std::map<std::type_index, int> m;
+        for (const auto& e: v)
         {
-            return l.index() < r.index();
-        });
-        auto newEnd = std::unique(params.begin(), params.end(), [](const auto& l, const auto& r)
-        {
-            return l.index() == r.index();
-        });
-        params.erase(newEnd, params.end());
-        if (initialSize != params.size())
-            FAIL() << "Fixture parameters are not unique";
+            m[std::type_index(e.type())]++;
+            
+            if (m[std::type_index(e.type())] > 1)
+            {
+                FAIL() << "Fixture parameters are not unique";
+            }
+        }
     }
-
-    std::unique_ptr<SystemConfig> systemConfig;
-    std::unique_ptr<NetworkConfig> networkConfig;
 };
 
-TEST_P(MyTest, t1)
+TEST_P(MyTest2, t1)
 {
+    //int v = &SystemConfig_x_123::create;
     std::cout << "t1" << std::endl;
 }
 
 INSTANTIATE_TEST_CASE_P(
         var_len,
-        MyTest,
+        MyTest2,
         ::testing::Values(
             MyTestParams{{&SystemConfig_x_123::create, &NetworkConfig_a_555::create}},
             MyTestParams{{&SystemConfig_x_123::create}}
