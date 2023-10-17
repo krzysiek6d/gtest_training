@@ -28,4 +28,5 @@ add_subdirectory(parametrized)
 add_subdirectory(whats_inside)
 add_subdirectory(mocks)
 add_subdirectory(matchers)
+add_subdirectory(output_to_files)
 
